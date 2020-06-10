@@ -1,8 +1,11 @@
-from .conv4d import Conv4d
+import logging
 import math
 import torch
 import torch.nn as nn
 
+from .conv4d import Conv4d
+
+logger = logging.getLogger(__name__)
 
 class ConvPass(torch.nn.Module):
 
@@ -12,7 +15,8 @@ class ConvPass(torch.nn.Module):
             out_channels,
             kernel_sizes,
             activation,
-            padding='valid'):
+            padding='valid',
+            output_pass=False):
 
         super(ConvPass, self).__init__()
 
@@ -50,6 +54,14 @@ class ConvPass(torch.nn.Module):
 
             if activation is not None:
                 layers.append(activation())
+
+        # last convolutional layer has no activation function
+        if output_pass and activation is not None:
+            logger.debug((
+                "Remove activation function"
+                "from last convolutional layer"
+            ))
+            layers = layers[:-1]
 
         self.conv_pass = torch.nn.Sequential(*layers)
 
@@ -409,7 +421,8 @@ class UNet(torch.nn.Module):
                     else num_fmaps_out,
                     kernel_size_up[level],
                     activation=activation,
-                    padding=padding)
+                    padding=padding,
+                    output_pass=True if level == 0 else False)
                 for level in range(self.num_levels - 1)
             ])
             for _ in range(num_heads)
