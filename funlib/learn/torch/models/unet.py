@@ -440,6 +440,8 @@ class UNet(torch.nn.Module):
         if level == 0:
 
             fs_out = [f_left]*self.num_heads
+            # Added by Mihir. Save latent vector of final layer. 
+            self.latent = fs_out
 
         else:
 
@@ -468,6 +470,8 @@ class UNet(torch.nn.Module):
         y = self.rec_forward(self.num_levels - 1, x)
 
         if self.num_heads == 1:
-            return y[0]
+            # 'self.latent' added by Mihir [2020-09-10]. Return latent vector of volume. 
+            return y[0], self.latent
 
-        return y
+        # 'self.latent' added by Mihir [2020-09-10]. Return latent vector of volume. 
+        return y, self.latent
